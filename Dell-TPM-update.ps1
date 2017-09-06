@@ -4,7 +4,7 @@
 .DESCRIPTION
    Disable TPM autoprovision until next reboot, suspend bitlocker, clear TPM owner, reboot, run this script a second time to flash firmware.
    Must be present at computer to hit F12 to accept clearing of TPM.
-.VARIABLES
+.NOTES
    Modify $tpmMinVer, $uri, $file for desired TPM firmware version and file source/destination
 #>
 
