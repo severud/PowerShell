@@ -1,8 +1,11 @@
 # https://marckean.com/2016/06/01/use-powershell-to-install-windows-updates/
+
 If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {   
     Write-Host "Must be run with administrative rights. Ending script." -ForegroundColor Red
     Break
 }
+
+[Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
 
 if (!(Test-Path "C:\Program Files (x86)\Dell\CommandUpdate\dcu-cli.exe")) {
     $uri = "https://downloads.dell.com/FOLDER04358530M/1/Dell-Command-Update_X79N4_WIN_2.3.1_A00.EXE"
