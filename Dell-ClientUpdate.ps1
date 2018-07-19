@@ -8,8 +8,8 @@ If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
 
 if (!(Test-Path "C:\Program Files (x86)\Dell\CommandUpdate\dcu-cli.exe")) {
-    $uri = "https://downloads.dell.com/FOLDER04358530M/1/Dell-Command-Update_X79N4_WIN_2.3.1_A00.EXE"
-    $file = "$env:temp/Dell-Command-Update_X79N4_WIN_2.3.1_A00.EXE"
+    $uri = "https://downloads.dell.com/FOLDER05055451M/1/Dell-Command-Update_DDVDP_WIN_2.4.0_A00.EXE"
+    $file = "$env:temp/DDell-Command-Update_DDVDP_WIN_2.4.0_A00.EXE"
     Invoke-WebRequest -Uri $uri -Method get -OutFile $file
     Unblock-File $file
     Start-Process -FilePath $file -ArgumentList "/s /f" -Wait 
