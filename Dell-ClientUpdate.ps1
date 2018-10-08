@@ -1,5 +1,3 @@
-# https://marckean.com/2016/06/01/use-powershell-to-install-windows-updates/
-
 If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {   
     Write-Host "Must be run with administrative rights. Ending script." -ForegroundColor Red
     Break
