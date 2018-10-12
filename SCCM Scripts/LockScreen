@@ -1,0 +1,4 @@
+$path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization" 
+$img =  "\\server\share\resources\wallpaper\lockcreen.png"
+
+Set-ItemProperty -Path $path -Name LockScreenImage -value $img
