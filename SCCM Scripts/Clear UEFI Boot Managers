@@ -1,0 +1,180 @@
+# ---------------------------------------------------------------------------
+# Get-RunEnvironment:  Returns whether running in WinPE
+# ---------------------------------------------------------------------------
+function Get-RunEnvironment {
+	try {
+		$TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment -ErrorAction Stop
+		if ($TSEnv.Value("_SMSTSInWinPE") -eq "true") {
+			Write-Information "Environment found: WinPE"
+			Write-Information ''
+			$script:InWinPE = $true }
+		else {
+			Write-Information "Environment found: Full OS"
+			Write-Information ''
+			$script:InWinPE = $false }
+	}
+	catch {
+		if (Test-Path -Path "HKLM:\SYSTEM\ControlSet001\Control\MiniNT" -PathType Container) {
+			Write-Information "Environment found: WinPE"
+			Write-Information ''
+			$script:InWinPE = $true
+		}
+		else
+		{
+			Write-Information "Environment found: Full OS"
+			Write-Information ''
+			$script:InWinPE = $false
+		}
+
+	}
+}
+
+# ---------------------------------------------------------------------------
+# Get-LogDir:  Return the location for logs and output files
+# ---------------------------------------------------------------------------
+function Get-LogDir
+{
+	try
+	{
+		$TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment -ErrorAction Stop
+		if ($TSEnv.Value("LogPath") -ne "")
+		{
+			$logDir = $TSEnv.Value("LogPath")
+		}
+		else
+		{
+			$logDir = $TSEnv.Value("_SMSTSLogPath")
+		}
+	}
+	catch
+	{
+		$logDir = $env:TEMP
+	}
+	return $logDir
+}
+
+# ---------------------------------------------------------------------------
+# Get-BCDObject:  Returns BCD Objects
+# ---------------------------------------------------------------------------
+function Get-BCDObject ()
+{
+	$bcdEntries = bcdedit /enum firmware | Where-Object { $_ -ne "" }
+	$bcdObject = @()
+
+	$UEFI = $False
+
+	foreach ($bcdEntry in $bcdEntries)
+	{
+		if ($bcdEntry -eq "Firmware Boot Manager")
+		{
+			$UEFI = $true
+		}
+		elseif ($bcdEntry -eq "Windows Boot Loader" -or $bcdEntry -eq "Windows Boot Manager" -or ($bcdEntry -eq "") -or $bcdEntry.Contains("-----"))
+		{
+			if (!($bcdEntry.Contains("-----")))
+			{
+				$UEFI = $false
+			}
+			else
+			{
+				if ($UEFI -eq $true)
+				{
+					Write-Information ''
+					Write-Information "Skipping PSobject creation because '$bcdEntry' is part of 'Firmware Boot Manager'"
+				}
+				else
+				{
+					Write-Information ''
+					Write-Information "'$bcdEntry' encountered, creating PSobject"
+					$object1 = New-Object PSObject
+					$bcdObject += $object1
+				}
+			}
+		}
+		else
+		{
+			if ($UEFI -eq $false)
+			{
+				$bcdsplit = $bcdEntry.Split(" ")
+				$property = $bcdsplit[0]
+				$value = ($bcdEntry.Substring($bcdsplit[0].length)).trim()
+				if ($property -ne '')
+				{
+					if (!($object1))
+					{
+						Write-Information "PSObject does not exist, skipping '$property'."
+					}
+					else
+					{
+						Write-Information "Adding '$property' to list"
+						$object1 | Add-Member -MemberType NoteProperty -Name $($property) -Value $value
+					}
+				}
+			}
+		}
+	}
+	return $bcdObject
+}
+
+$logDir = Get-LogDir
+Start-Transcript "$logDir\Remove-OldBCDEntries.log"
+
+$bcdEntriesBefore = bcdedit /enum firmware
+Write-Information '=========================BCDEdit Before========================='
+foreach ($bcdEntryBefore in $bcdEntriesBefore)
+{
+	Write-Information "$($bcdEntryBefore)"
+}
+Write-Information '=======================End BCDEdit Before======================='
+Write-Information ''
+
+Get-RunEnvironment
+
+
+$bcdObjs = Get-BCDObject # Store bcdedit output in a Powershell object
+
+foreach ($bcdObj in $bcdObjs)
+{
+	if ((Get-Culture).Name -eq 'fr-FR') # Not using an English version of Windows? Find your culture code here: https://technet.microsoft.com/en-us/library/cc722435(v=ws.10).aspx
+	{
+		$BootIdentifier = $bcdObj.identificateur # Change this to how "identifier" is said in your culture.
+	}
+	else
+	{
+		$BootIdentifier = $bcdObj.identifier # English default.
+	}
+	$BootDescription = $bcdObj.description
+	if ($script:InWinPE)
+	{
+		if ($BootDescription -eq "Windows Boot Loader" -or $BootDescription -eq "Windows Boot Manager")
+		{
+			Write-Information "Deleting '$BootIdentifier'"
+			bcdedit /delete "$BootIdentifier" /cleanup /f
+		}
+		else
+		{
+			Write-Information "Skipping '$BootIdentifier'"
+		}
+	}
+	else
+	{
+		if ($BootDescription -eq "Windows Boot Loader" -or $BootDescription -eq "Windows Boot Manager" -and $BootIdentifier -ne "{bootmgr}")
+		{
+			Write-Information "Deleting '$BootIdentifier'"
+			bcdedit /delete "$BootIdentifier" /cleanup /f
+		}
+		else
+		{
+			Write-Information "Skipping '$BootIdentifier'"
+		}
+	}
+}
+$bcdEntriesAfter = bcdedit /enum firmware
+Write-Information '=========================BCDEdit After========================='
+foreach ($bcdEntryAfter in $bcdEntriesAfter)
+{
+	Write-Information "$($bcdEntryAfter)"
+}
+Write-Information '=======================End BCDEdit After======================='
+Write-Information ''
+Stop-Transcript
