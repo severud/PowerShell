@@ -1,0 +1,15 @@
+New-PSDrive -PSProvider registry -Root HKEY_CLASSES_ROOT -Name HKCR
+Set-Location HKCR:
+$regkeypath= get-item "HKCR:\Installer\Features\091F34DE284918B42B7DD585379A0B81" -ErrorAction SilentlyContinue
+Remove-Item -path $regkeypath -Recurse  -ErrorAction SilentlyContinue
+$regkeypath= get-item "HKCR:\Installer\Products\091F34DE284918B42B7DD585379A0B81" -ErrorAction SilentlyContinue
+Remove-Item -path $regkeypath.name -Recurse -ErrorAction SilentlyContinue
+Set-Location c:
+remove-psdrive -name HKCR
+
+    $uri = "https://github.com/rzander/ruckzuck/releases/download/1.6.1.1/RuckZuck.provider.for.OneGet_x64.msi"
+    $file = "$env:temp/RuckZuck.provider.for.OneGet_x64.msi"
+    Invoke-WebRequest -Uri $uri -Method get -OutFile $file
+    Unblock-File $file
+    Start-Process -FilePath $file -ArgumentList "/qn" -Wait 
+    rm $file -Force
