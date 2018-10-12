@@ -1,0 +1,2 @@
+$TPMVer = Get-Tpm
+$TPMVer.ManufacturerVersionFull20
