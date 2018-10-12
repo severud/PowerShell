@@ -1,0 +1,2 @@
+$file = "C:\intelFPGA\17.0\quartus\drivers\DPInst.exe"
+Start-Process -FilePath $file -ArgumentList "/S /SE /PATH C:\intelFPGA\17.0\quartus\drivers\" -Wait 
