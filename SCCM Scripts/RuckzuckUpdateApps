@@ -1,0 +1,73 @@
+If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {   
+    Write-Host "Must be run with administrative rights. Ending script." -ForegroundColor Red
+    Break
+}
+
+$Policy = "RemoteSigned"
+If ((get-ExecutionPolicy) -ne $Policy) {
+   Set-ExecutionPolicy $Policy -Force
+}
+
+Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+
+New-PSDrive -PSProvider registry -Root HKEY_CLASSES_ROOT -Name HKCR -ErrorAction SilentlyContinue| Out-Null
+Set-Location HKCR:
+if (get-item "HKCR:\Installer\Features\091F34DE284918B42B7DD585379A0B81" -ErrorAction SilentlyContinue) {
+    $regkeypath= get-item "HKCR:\Installer\Features\091F34DE284918B42B7DD585379A0B81" -ErrorAction SilentlyContinue | Out-Null
+    Remove-Item -path $regkeypath -Recurse  -ErrorAction SilentlyContinue | Out-Null
+    }
+
+if (get-item "HKCR:\Installer\Products\091F34DE284918B42B7DD585379A0B81" -ErrorAction SilentlyContinue) {
+    $regkeypath= get-item "HKCR:\Installer\Products\091F34DE284918B42B7DD585379A0B81" -ErrorAction SilentlyContinue | Out-Null
+    Remove-Item -path $regkeypath.name -Recurse -ErrorAction SilentlyContinue | Out-Null
+    }
+Set-Location c:
+remove-psdrive -name HKCR
+
+if ( ((Get-Module -Name PSWindowsUpdate -ListAvailable).count -gt 1) -or ( (Get-Module -Name PSWindowsUpdate -ListAvailable).Version -lt (Find-Module PSWindowsUpdate -Repository PSGallery).version) ) {
+    Write-Information -MessageData 'Installing module PSWindowsUpdate from repository PSGallery' -InformationAction Continue
+    Uninstall-Module PSWindowsUpdate -force -AllVersions -ErrorAction SilentlyContinue
+    Find-Module PSWindowsUpdate -Repository PSGallery | Install-Module -force
+    }
+    else {
+        Write-Information -MessageData 'PSWindowsUpdate version:' -InformationAction Continue
+        Write-Information -MessageData (Get-Module -Name PSWindowsUpdate -ListAvailable).Version -InformationAction Continue
+}
+
+#Check for NuGet Package Provider installation status and version
+$NuGetPackageSource = Find-PackageProvider -Name nuget
+$NuGetPackageInstalled = Get-PackageProvider | Where-Object {$_.name -contains "NuGet"}
+
+if (!($NuGetPackageInstalled)) {
+     Install-PackageProvider -Name NuGet -Force -
+} elseif  ($NuGetPackageInstalled.version -lt $NuGetPackageSource.version) {
+    Install-PackageProvider -Name NuGet -Force  -Confirm $false
+}
+
+#Check for RuckZuck provider for PowerShell installation status
+if (!(Test-Path "C:\Program Files\RuckZuck for OneGet\RuckZuckProvider.dll") -or [System.Diagnostics.FileVersionInfo]::GetVersionInfo("C:\Program Files\RuckZuck for OneGet\RuckZuckProvider.dll").FileVersion -lt "1.6.1.1") {
+    [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
+    $uri = "https://github.com/rzander/ruckzuck/releases/download/1.6.1.1/RuckZuck.provider.for.OneGet_x64.msi"
+    $file = "$env:temp/RuckZuck.provider.for.OneGet_x64.msi"
+    Invoke-WebRequest -Uri $uri -Method get -OutFile $file
+    Unblock-File $file
+    Start-Process -FilePath $file -ArgumentList "/qn" -Wait 
+    rm $file -Force
+} else {
+}
+
+Get-Package -ProviderName RuckZuck | Format-Table name, version -AutoSize -wrap
+
+$PackageUpdates = Find-Package -ProviderName RuckZuck -Updates
+$PackageUpdates | Format-Table name, version, PackageFilename -AutoSize -Wrap
+
+foreach ($Package in $PackageUpdates.PackageFilename) {
+    #Write-Host ("Current package: ") -NoNewline
+    Write-Output (Find-Package -ProviderName RuckZuck $Package).Name
+    Install-Package -ProviderName RuckZuck -Name $Package
+}
+
+#Delete icons on "All users" desktop
+if (Get-Item "$env:Public\Desktop\*.lnk") {
+    Invoke-Command {cmd.exe /c del /F /Q "C:\Users\Public\Desktop\*.lnk"} -ErrorAction SilentlyContinue
+}
