@@ -1,0 +1,1 @@
+& 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' update --quiet --channelID VisualStudio.15.Release --productid Microsoft.VisualStudio.Product.Community
