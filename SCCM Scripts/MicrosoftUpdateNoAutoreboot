@@ -1,0 +1,15 @@
+if (!($NuGetPackageInstalled)) {
+     Install-PackageProvider -Name NuGet -Force
+} elseif  ($NuGetPackageInstalled.version -lt $NuGetPackageSource.version) {
+    Install-PackageProvider -Name NuGet -Force
+}
+
+#Install/Upgrade PSWindowsUpdate module.
+Import-Module PSWindowsUpdate -ErrorAction SilentlyContinue
+if ( ((Get-Module -Name PSWindowsUpdate -ListAvailable).count -gt 1) -or ( (Get-Module -Name PSWindowsUpdate -ListAvailable).Version -lt (Find-Module PSWindowsUpdate -Repository PSGallery).version) ) {
+    Write-Information -MessageData 'Upgrading module PSWindowsUpdate from repository PSGallery' -InformationAction Continue
+    Uninstall-Module PSWindowsUpdate -force -AllVersions
+    Find-Module PSWindowsUpdate -Repository PSGallery | Install-Module -force
+    }
+
+Get-WUInstall –MicrosoftUpdate –AcceptAll
