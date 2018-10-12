@@ -1,0 +1,1 @@
+Find-Package -ProviderName RuckZuck -Name 'firefox' | Install-Package
