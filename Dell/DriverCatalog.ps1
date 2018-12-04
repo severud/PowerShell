@@ -1,11 +1,12 @@
 # https://ccmcache.wordpress.com/2018/11/28/use-powershell-to-discover-new-dell-bios-driver-updates-faster/
 # Initialize array of desired models
-$models = @("Latitude E7240 Ultrabook",
+$models = @("Latitude E6220",
+            "Latitude E6330",
+            "Latitude E6420",
+            "Latitude E6430",
+            "OptiPlex 7040",
             "OptiPlex 7060",
-            "OptiPlex 7460 All In One",
-            "Optiplex 9010",
-            "Precision 5820 Tower",
-            "Venue 7130 Pro/7139 Pro")
+            "Optiplex 7010")
 
 # Set URI variables
 $baseURI = "http://downloads.dell.com/published/Pages/"
