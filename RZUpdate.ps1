@@ -11,7 +11,8 @@ If ((get-ExecutionPolicy) -ne $Policy) {
 [Net.ServicePointManager]::SecurityProtocol = "tls12"
 
 # Download specific version of RZUpdate.exe
-# $uri = "https://github.com/rzander/ruckzuck/releases/download/1.6.2.13/RZUpdate.exe"
+# $tag = '1.6.2.13'
+# $uri = "https://github.com/rzander/ruckzuck/releases/download/$tag/RZUpdate.exe"
 # $file = "RZUpdate.exe"
 # Download Package
 #    Invoke-WebRequest -Uri $uri -Method get -OutFile $env:temp\$file
