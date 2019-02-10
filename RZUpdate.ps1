@@ -10,15 +10,29 @@ If ((get-ExecutionPolicy) -ne $Policy) {
 
 [Net.ServicePointManager]::SecurityProtocol = "tls12"
 
-$uri = "https://github.com/rzander/ruckzuck/releases/download/1.6.1.6/RZUpdate.exe"
- 
-$file = "$env:temp\RZUpdate.exe"
- 
+# Download specific version of RZUpdate.exe
+# $uri = "https://github.com/rzander/ruckzuck/releases/download/1.6.2.13/RZUpdate.exe"
+# $file = "RZUpdate.exe"
 # Download Package
-    Invoke-WebRequest -Uri $uri -Method get -OutFile $file
-    Unblock-File $file
+#    Invoke-WebRequest -Uri $uri -Method get -OutFile $env:temp\$file
+#    Unblock-File $env:temp\$file
 
-Start-Process -FilePath $file -ArgumentList "/Update"  -NoNewWindow -wait
+# Download latest RZUpdate.exe from rzander/ruckzuck release from github
+# Reference: https://gist.github.com/MarkTiedemann/c0adc1701f3f5c215fc2c2d5b1d5efd3
+$repo = "rzander/ruckzuck"
+$file = "RZUpdate.exe"
+$releases = "https://api.github.com/repos/$repo/releases"
+
+Write-Host Determining latest release
+$tag = (Invoke-WebRequest $releases | ConvertFrom-Json)[0].tag_name
+
+$download = "https://github.com/$repo/releases/download/$tag/$file"
+
+Write-Host Dowloading: RZUpdate.exe $tag
+Invoke-WebRequest $download -OutFile $env:temp\$file
+Unblock-File $env:temp\$file
+
+Start-Process -FilePath $env:temp\$file -ArgumentList "/Update"  -NoNewWindow -wait
 
 #Delete desktop shortcuts in public folder
 if (Get-Item "$env:Public\Desktop\*.lnk") {
@@ -26,4 +40,4 @@ if (Get-Item "$env:Public\Desktop\*.lnk") {
 }
  
 # Remove file
-Remove-Item $file -Force
+Remove-Item $env:temp\$file -Force
