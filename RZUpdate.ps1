@@ -24,19 +24,19 @@ $file = "RZUpdate.exe"
 $releases = "https://api.github.com/repos/$repo/releases"
 
 Write-Host Determining latest release
-$tag = (Invoke-WebRequest $releases | ConvertFrom-Json)[0].tag_name
+$tag = (Invoke-WebRequest $releases -UseBasicParsing | ConvertFrom-Json)[0].tag_name
 
 $download = "https://github.com/$repo/releases/download/$tag/$file"
 
 Write-Host Dowloading: RZUpdate.exe $tag
-Invoke-WebRequest $download -OutFile $env:temp\$file
+Invoke-WebRequest $download -OutFile $env:temp\$file -UseBasicParsing
 Unblock-File $env:temp\$file
 
 Start-Process -FilePath $env:temp\$file -ArgumentList "/Update"  -NoNewWindow -wait
 
 #Delete desktop shortcuts in public folder
 if (Get-Item "$env:Public\Desktop\*.lnk") {
-    Invoke-Command {cmd.exe /c del /F /Q "C:\Users\Public\Desktop\*.lnk"} -ErrorAction SilentlyContinue
+    Remove-Item –path C:\users\Public\Desktop\* -include *.lnk
 }
  
 # Remove file
