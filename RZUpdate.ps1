@@ -22,7 +22,7 @@ If ((get-ExecutionPolicy) -ne $Policy) {
 # Reference: https://gist.github.com/MarkTiedemann/c0adc1701f3f5c215fc2c2d5b1d5efd3
 $repo = "rzander/ruckzuck"
 $file = "RZUpdate.exe"
-$releases = "https://api.github.com/repos/$repo/releases"
+$releases = "https://api.github.com/repos/$repo/releases/latest"
 
 Write-Host Determining latest release
 $tag = (Invoke-WebRequest $releases -UseBasicParsing | ConvertFrom-Json)[0].tag_name
