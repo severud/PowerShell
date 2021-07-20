@@ -1,21 +1,20 @@
 Function Get-RedirectedUrl {
     Param (
-    [Parameter(Mandatory=$true)]
-    [String]$url
+        [Parameter(Mandatory = $true)]
+        [String]$url
     )
     
     $request = [System.Net.WebRequest]::Create($url)
-    $request.AllowAutoRedirect=$true
+    $request.AllowAutoRedirect = $true
     
-    try{
-    $response=$request.GetResponse()
-    $response.ResponseUri.AbsoluteUri
-    $response.Close()
+    try {
+        $response = $request.GetResponse()
+        $response.ResponseUri.AbsoluteUri
+        $response.Close()
     }
     
-    catch{
-    "ERROR: $_"
+    catch {
+        "ERROR: $_"
     }
     
-    }
-    
+}
