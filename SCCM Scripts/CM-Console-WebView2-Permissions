@@ -1,0 +1,32 @@
+# Define the corrected folder path
+$folderPath = "C:\Program Files (x86)\Microsoft Configuration Manager\AdminConsole\bin\Microsoft.ConfigurationManagement.exe.WebView2"
+
+# Check if the folder exists
+if (-Not (Test-Path $folderPath)) {
+    Write-Host "Folder does not exist: $folderPath"
+    return
+}
+
+# Define the user or group to grant permissions to
+# You can change 'Users' to your specific username if needed
+$identity = "Users"
+
+# Define the access rule
+$accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+    $identity,
+    "Modify",
+    "ContainerInherit,ObjectInherit",
+    "None",
+    "Allow"
+)
+
+# Get the current ACL
+$acl = Get-Acl $folderPath
+
+# Add the access rule
+$acl.SetAccessRule($accessRule)
+
+# Apply the updated ACL
+Set-Acl -Path $folderPath -AclObject $acl
+
+Write-Host "Permissions updated for $identity on $folderPath"
